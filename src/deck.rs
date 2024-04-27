@@ -1,15 +1,21 @@
+use rand::Rng;
+
 use crate::cards::card::{Card, Suit};
 
 pub struct Deck {
-    Cards: Vec<Card>,
+    cards: Vec<Card>,
 }
 
 impl Deck {
+    /// Initializes a new deck with all cards
+    /// ```rust
+    /// let my_deck = Deck::new();
+    /// ````
     pub fn new() -> Self {
         let mut deck = Deck {
-            Cards: vec![],
+            cards: vec![],
         };
-        deck.Cards = deck.create_deck();
+        deck.cards = deck.create_deck();
         deck
     }
 
@@ -39,9 +45,20 @@ impl Deck {
         card_deck
     }
 
+    /// Prints current deck stored in Deck.cards field
+    ///  ```rust
+    ///     let my_deck = Deck::new();
+    ///     my_deck.print_deck();
+    ///
+    ///     // Output
+    ///     [ 2 ♥️ ][ 3 ♥️ ][ 4 ♥️ ][ 5 ♥️ ][ 6 ♥️ ][ 7 ♥️ ][ 8 ♥️ ][ 9 ♥️ ][ 10 ♥️ ][ J ♥️ ][ Q ♥️ ][ K ♥️ ][ A ♥️ ]
+    ///     [ 2 ♠️ ][ 3 ♠️ ][ 4 ♠️ ][ 5 ♠️ ][ 6 ♠️ ][ 7 ♠️ ][ 8 ♠️ ][ 9 ♠️ ][ 10 ♠️ ][ J ♠️ ][ Q ♠️ ][ K ♠️ ][ A ♠️ ]
+    ///     [ 2 ♣️ ][ 3 ♣️ ][ 4 ♣️ ][ 5 ♣️ ][ 6 ♣️ ][ 7 ♣️ ][ 8 ♣️ ][ 9 ♣️ ][ 10 ♣️ ][ J ♣️ ][ Q ♣️ ][ K ♣️ ][ A ♣️ ]
+    ///     [ 2 ♦️ ][ 3 ♦️ ][ 4 ♦️ ][ 5 ♦️ ][ 6 ♦️ ][ 7 ♦️ ][ 8 ♦️ ][ 9 ♦️ ][ 10 ♦️ ][ J ♦️ ][ Q ♦️ ][ K ♦️ ][ A ♦️ ]
+    ///  ```
     pub fn print_deck(&self) {
         println!("Deck: 👇");
-        for (i, c) in self.Cards.iter().enumerate() {
+        for (i, c) in self.cards.iter().enumerate() {
             if i % 13 == 0 {
                 println!();
             }
@@ -51,6 +68,13 @@ impl Deck {
     }
 
     pub fn total_len(&self) -> usize {
-        self.Cards.len()
+        self.cards.len()
+    }
+
+    pub fn shuffle(&mut self) {
+        for i in 0..self.cards.len() {
+            let r = i + (rand::thread_rng().gen_range(0..self.total_len()) % (52 - i));
+            self.cards.swap(i, r)
+        }
     }
 }

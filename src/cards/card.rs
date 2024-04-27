@@ -38,7 +38,7 @@ impl Card {
     }
 
     pub fn new(suit: Suit, value: String) -> Self {
-        let mut card = Card {
+        let card = Card {
             value,
             suit,
             priority: -1,

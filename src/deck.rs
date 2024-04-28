@@ -1,6 +1,6 @@
 use rand::Rng;
 
-use crate::cards::card::{Card, Suit};
+use crate::card::{Card, Suit};
 
 pub struct Deck {
     cards: Vec<Card>,
@@ -57,7 +57,7 @@ impl Deck {
     ///     [ 2 ♦️ ][ 3 ♦️ ][ 4 ♦️ ][ 5 ♦️ ][ 6 ♦️ ][ 7 ♦️ ][ 8 ♦️ ][ 9 ♦️ ][ 10 ♦️ ][ J ♦️ ][ Q ♦️ ][ K ♦️ ][ A ♦️ ]
     ///  ```
     pub fn print_deck(&self) {
-        println!("Deck: 👇");
+        println!("\nDeck: 👇");
         for (i, c) in self.cards.iter().enumerate() {
             if i % 13 == 0 {
                 println!();
@@ -76,5 +76,9 @@ impl Deck {
             let r = i + (rand::thread_rng().gen_range(0..self.total_len()) % (52 - i));
             self.cards.swap(i, r)
         }
+    }
+    
+    pub fn distribute(&mut self) -> Card {
+        self.cards.swap_remove(0)
     }
 }

@@ -6,15 +6,15 @@ use crate::card::Card;
 use crate::deck::Deck;
 use crate::player::Player;
 
-pub struct Game {
+pub struct Game<'a> {
     deck: Deck,
     players: Vec<Player>,
     default_calls: HashMap<u8, Call>,
-    current_round: Vec<Round>,
+    current_round: Vec<Round<'a>>,
 }
 
-struct Round {
-    player: Player,
+struct Round<'a> {
+    player: &'a Player,
     card: Card,
 }
 
@@ -29,13 +29,14 @@ pub enum Call {
     Eight(u8),
 }
 
-impl Game {
+impl<'a> Game<'a> {
     pub fn new_game() -> Self {
         let new_deck = Deck::new();
         let mut game = Game {
             deck: new_deck,
             players: vec![],
             default_calls: HashMap::new(),
+            current_round: vec![],
         };
 
         game.initiate_calls();
@@ -96,8 +97,27 @@ impl Game {
         self.players[3].reveal(1234.borrow());
     }
 
+    fn get_player_index(&self, player_name: &str) -> usize {
+        let mut idx = self.players.len() - 1;
+        for (i, c) in self.players.iter().enumerate() {
+            if c.get_name() == player_name {
+                idx = i
+            }
+        }
+        idx
+    }
 
-    pub fn throw() {
+
+    pub fn throw(&mut self, player_name: &str, card_idx: usize) {
         // throw the current players card to the
+        let player_idx = self.get_player_index(player_name);
+
+        // throw the card that the player passed to the round
+        let throwable_card = self.players[player_idx].throw(card_idx);
+        // add the card to the round
+        // self.current_round.push(Round {
+        //     player: &self.players[player_idx],
+        //     card: throwable_card,
+        // });
     }
 }

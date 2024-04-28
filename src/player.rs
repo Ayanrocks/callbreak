@@ -42,14 +42,17 @@ impl Player {
         println!()
     }
 
-    pub fn throw(&mut self, card: Card) -> Card {
+    pub fn get_card_idx(&self, card_value: &str) -> usize {
         let mut idx = 0;
         for (i, c) in self.cards.iter().enumerate() {
-            if card.get_value() == c.get_value() {
+            if card_value == c.get_value() {
                 idx = i
             }
         }
+        idx
+    }
 
-        self.cards.swap_remove(idx)
+    pub fn throw(&mut self, card_idx: usize) -> Card {
+        self.cards.swap_remove(card_idx)
     }
 }

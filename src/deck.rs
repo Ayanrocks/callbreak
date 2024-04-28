@@ -73,7 +73,7 @@ impl Deck {
 
     pub fn shuffle(&mut self) {
         for i in 0..self.cards.len() {
-            let r = i + (rand::thread_rng().gen_range(0..self.total_len()) % (52 - i));
+            let r = i + (rand::thread_rng().gen_range(0..self.total_len()) % (self.total_len() - i));
             self.cards.swap(i, r)
         }
     }

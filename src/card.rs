@@ -61,5 +61,9 @@ impl Card {
     pub fn print(self) {
         println!("{}", self.get_print_str());
     }
+
+    pub fn get_value(&self) -> &str {
+        self.value.as_str()
+    }
 }
 

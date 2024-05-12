@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+#[derive(Copy, Clone, PartialEq)]
 pub enum Suit {
     Club,
     Spade,
@@ -14,7 +15,7 @@ pub struct Card {
 }
 
 impl Card {
-    fn get_priority(&self, value: &str) -> i32 {
+    pub fn get_initial_priority(&self, value: &str) -> i32 {
         let mut hash_map: HashMap<&str, i32> = HashMap::new();
         hash_map.insert("2", 2);
         hash_map.insert("3", 3);
@@ -43,7 +44,7 @@ impl Card {
             suit,
             priority: -1,
         };
-        card.get_priority(card.value.as_str());
+        card.get_initial_priority(card.value.as_str());
         card
     }
 
@@ -63,7 +64,15 @@ impl Card {
     }
 
     pub fn get_value(&self) -> &str {
-        self.value.as_str()
+        self.value.as_str().clone()
+    }
+
+    pub fn get_suit(&self) -> Suit {
+        self.suit.clone()
+    }
+
+    pub fn get_priority(&self) -> i32 {
+        self.priority.clone()
     }
 }
 

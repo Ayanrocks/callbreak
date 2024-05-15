@@ -157,18 +157,23 @@ impl<'a> Game<'a> {
                 priority: throwable_card.get_priority(),
                 value: throwable_card.get_value().to_string(),
             };
+            let new_round = Round {
+                player: player_name,
+                card: throwable_card,
+            };
+            // add the card to the round
+            self.current_round.rounds.push(new_round);
         } else {
+            let new_round = Round {
+                player: player_name,
+                card: throwable_card,
+            };
+            // add the card to the round
+            self.current_round.rounds.push(new_round);
+
             // get the current winner
             self.get_round_winner();
-            println!("SELF WINNER: name- {}, card: {}", self.current_round.winner.player, self.current_round.winner.value)
         }
-
-        let new_round = Round {
-            player: player_name,
-            card: throwable_card,
-        };
-        // add the card to the round
-        self.current_round.rounds.push(new_round);
     }
 
     /// clears current round and adds an empty round
@@ -182,9 +187,8 @@ impl<'a> Game<'a> {
         // set rules for winner of the game
         // check if any spade is there in the card
         for s in self.current_round.rounds.iter() {
-            println!("{}, {}, {}", s.card.get_value(), self.current_round.winner.priority, self.current_round.winner.suit != Suit::Spade);
             if s.card.get_value() == self.current_round.winner.value {
-                continue
+                continue;
             }
             if s.card.get_suit() == Suit::Spade {
                 // get the highest suit if the current winning suit is 'spade'

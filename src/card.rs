@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum Suit {
     Club,
     Spade,
@@ -39,12 +39,12 @@ impl Card {
     }
 
     pub fn new(suit: Suit, value: String) -> Self {
-        let card = Card {
+        let mut card = Card {
             value,
             suit,
             priority: -1,
         };
-        card.get_initial_priority(card.value.as_str());
+        card.priority = card.get_initial_priority(card.value.as_str());
         card
     }
 

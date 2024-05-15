@@ -64,15 +64,15 @@ impl Card {
     }
 
     pub fn get_value(&self) -> &str {
-        self.value.as_str().clone()
+        self.value.as_str()
     }
 
     pub fn get_suit(&self) -> Suit {
-        self.suit.clone()
+        self.suit
     }
 
     pub fn get_priority(&self) -> i32 {
-        self.priority.clone()
+        self.priority
     }
 }
 

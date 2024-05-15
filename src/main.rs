@@ -30,5 +30,8 @@ fn main() {
     new_game.add_players("b2b", 1234.borrow(), 2);
     new_game.start();
 
+    new_game.throw("as", 0);
+    new_game.throw("bb", 1);
+
     println!("Hello, world!, {}", deck.total_len());
 }

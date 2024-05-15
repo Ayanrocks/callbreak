@@ -15,10 +15,11 @@ pub struct Game<'a> {
 
 struct Trick<'a> {
     rounds: Vec<Round<'a>>,
-    winner: Winner<'a>,
+    winner: Participant<'a>,
+    lead_thrower: Participant<'a>,
 }
 
-struct Winner<'a> {
+struct Participant<'a> {
     player: &'a str,
     suit: Suit,
     priority: i32,
@@ -135,7 +136,7 @@ impl<'a> Game<'a> {
     pub fn throw(&mut self, player_name: &'a str, card_idx: usize) {
         // check if this is a new round or an existing round
         let mut is_new_round = true;
-        if self.current_round.rounds.len() != 0 {
+        if !self.current_round.rounds.is_empty() {
             is_new_round = false
         }
         // throw the current players card to the
@@ -144,15 +145,22 @@ impl<'a> Game<'a> {
         let throwable_card = self.players[player_idx].throw(card_idx);
         // get the current winner of the round
         if is_new_round {
-            self.current_round.winner = Winner {
+            self.current_round.winner = Participant {
                 player: player_name,
                 suit: throwable_card.get_suit(),
                 priority: throwable_card.get_priority(),
                 value: throwable_card.get_value().to_string(),
-            }
+            };
+            self.current_round.lead_thrower = Participant {
+                player: player_name,
+                suit: throwable_card.get_suit(),
+                priority: throwable_card.get_priority(),
+                value: throwable_card.get_value().to_string(),
+            };
         } else {
             // get the current winner
-            self.get_round_winner()
+            self.get_round_winner();
+            println!("SELF WINNER: name- {}, card: {}", self.current_round.winner.player, self.current_round.winner.value)
         }
 
         let new_round = Round {
@@ -174,36 +182,35 @@ impl<'a> Game<'a> {
         // set rules for winner of the game
         // check if any spade is there in the card
         for s in self.current_round.rounds.iter() {
+            println!("{}, {}, {}", s.card.get_value(), self.current_round.winner.priority, self.current_round.winner.suit != Suit::Spade);
+            if s.card.get_value() == self.current_round.winner.value {
+                continue
+            }
             if s.card.get_suit() == Suit::Spade {
-                // get the highest suit if the current suit is 'spade'
+                // get the highest suit if the current winning suit is 'spade'
                 if self.current_round.winner.suit == Suit::Spade {
                     if s.card.get_priority() > self.current_round.winner.priority {
-                        self.current_round.winner = Winner::new(s.player,
-                                                                s.card.get_suit(),
-                                                                s.card.get_priority(),
-                                                                s.card.get_value().to_string());
+                        self.current_round.winner = Participant::new(s.player,
+                                                                     s.card.get_suit(),
+                                                                     s.card.get_priority(),
+                                                                     s.card.get_value().to_string());
                     }
                 } else {
                     // if the current winner is not spade then by default spade wins
-                    self.current_round.winner = Winner::new(s.player,
-                                                            s.card.get_suit(),
-                                                            s.card.get_priority(),
-                                                            s.card.get_value().to_string());
+                    self.current_round.winner = Participant::new(s.player,
+                                                                 s.card.get_suit(),
+                                                                 s.card.get_priority(),
+                                                                 s.card.get_value().to_string());
                 }
-            } else {
-                if self.current_round.winner.suit == Suit::Spade {
-                    self.current_round.winner = Winner::new(s.player,
-                                                            s.card.get_suit(),
-                                                            s.card.get_priority(),
-                                                            s.card.get_value().to_string());
-                } else {
-                    // check for a higher priority card
-                    if s.card.get_priority() > self.current_round.winner.priority && s.card.get_suit() == self.current_round.winner.suit {
-                        self.current_round.winner = Winner::new(s.player,
-                                                                s.card.get_suit(),
-                                                                s.card.get_priority(),
-                                                                s.card.get_value().to_string());
-                    }
+            } else if self.current_round.winner.suit != Suit::Spade {
+                // if the current winner is not spade then we need to see if the lead thrower and the current thrower
+                // has the same suit, then we need to check for the priority and decide the winner
+                // check for a higher priority card
+                if s.card.get_priority() > self.current_round.winner.priority && s.card.get_suit() == self.current_round.lead_thrower.suit {
+                    self.current_round.winner = Participant::new(s.player,
+                                                                 s.card.get_suit(),
+                                                                 s.card.get_priority(),
+                                                                 s.card.get_value().to_string());
                 }
             }
         }
@@ -214,9 +221,15 @@ impl<'a> Trick<'a> {
     pub fn new() -> Trick<'a> {
         Trick {
             rounds: vec![],
-            winner: Winner {
+            winner: Participant {
                 player: "",
                 suit: (Suit::Spade),
+                priority: 0,
+                value: "".to_string(),
+            },
+            lead_thrower: Participant {
+                player: "",
+                suit: Suit::Spade,
                 priority: 0,
                 value: "".to_string(),
             },
@@ -224,9 +237,9 @@ impl<'a> Trick<'a> {
     }
 }
 
-impl<'a> Winner<'a> {
-    pub fn new(player_name: &str, suit: Suit, priority: i32, value: String) -> Winner {
-        Winner {
+impl<'a> Participant<'a> {
+    pub fn new(player_name: &str, suit: Suit, priority: i32, value: String) -> Participant {
+        Participant {
             player: player_name,
             suit,
             priority,

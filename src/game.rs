@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use rand::distributions::uniform::SampleBorrow;
 
-use crate::card::{Card, Suit};
+use crate::card::{Card, Suit, TRUMP_SUIT};
 use crate::deck::Deck;
 use crate::player::Player;
 
@@ -190,9 +190,9 @@ impl<'a> Game<'a> {
             if s.card.get_value() == self.current_round.winner.value {
                 continue;
             }
-            if s.card.get_suit() == Suit::Spade {
+            if s.card.get_suit() == TRUMP_SUIT {
                 // get the highest suit if the current winning suit is 'spade'
-                if self.current_round.winner.suit == Suit::Spade {
+                if self.current_round.winner.suit == TRUMP_SUIT {
                     if s.card.get_priority() > self.current_round.winner.priority {
                         self.current_round.winner = Participant::new(s.player,
                                                                      s.card.get_suit(),
@@ -206,7 +206,7 @@ impl<'a> Game<'a> {
                                                                  s.card.get_priority(),
                                                                  s.card.get_value().to_string());
                 }
-            } else if self.current_round.winner.suit != Suit::Spade {
+            } else if self.current_round.winner.suit != TRUMP_SUIT {
                 // if the current winner is not spade then we need to see if the lead thrower and the current thrower
                 // has the same suit, then we need to check for the priority and decide the winner
                 // check for a higher priority card
@@ -219,6 +219,12 @@ impl<'a> Game<'a> {
             }
         }
     }
+
+    pub fn get_player_eligible_cards(&self, name: &str) {
+        let idx = self.get_player_index(name);
+        let lead_card = Card::new(self.current_round.lead_thrower.suit, self.current_round.lead_thrower.value.to_string());
+        self.players[idx].get_eligible_cards(&lead_card);
+    }
 }
 
 impl<'a> Trick<'a> {
@@ -227,13 +233,13 @@ impl<'a> Trick<'a> {
             rounds: vec![],
             winner: Participant {
                 player: "",
-                suit: (Suit::Spade),
+                suit: (TRUMP_SUIT),
                 priority: 0,
                 value: "".to_string(),
             },
             lead_thrower: Participant {
                 player: "",
-                suit: Suit::Spade,
+                suit: TRUMP_SUIT,
                 priority: 0,
                 value: "".to_string(),
             },

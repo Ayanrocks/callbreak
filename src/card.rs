@@ -8,6 +8,9 @@ pub enum Suit {
     Diamonds,
 }
 
+// Default trump suit is spade
+pub const TRUMP_SUIT: Suit = Suit::Spade;
+
 pub struct Card {
     value: String,
     suit: Suit,
@@ -59,7 +62,7 @@ impl Card {
         format!("[ {} {} ]", self.value, parsed_suit)
     }
 
-    pub fn print(self) {
+    pub fn print(&self) {
         println!("{}", self.get_print_str());
     }
 

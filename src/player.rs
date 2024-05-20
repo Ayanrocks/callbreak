@@ -1,4 +1,4 @@
-use crate::card::Card;
+use crate::card::{Card, TRUMP_SUIT};
 use crate::game::Call;
 
 pub struct Player {
@@ -54,5 +54,24 @@ impl Player {
 
     pub fn throw(&mut self, card_idx: usize) -> Card {
         self.cards.swap_remove(card_idx)
+    }
+
+    /// points to the eligible list of cards that the user needs to throw
+    pub fn get_eligible_cards(&self, lead_thrower: &Card) {
+        // check the lead thrower first
+        let mut eligible_cards: Vec<(&Card, usize)> = vec![];
+
+        for (i, c) in self.cards.iter().enumerate() {
+            if c.get_suit() == lead_thrower.get_suit() {
+                eligible_cards.push((&c, i))
+            }
+            if c.get_suit() == TRUMP_SUIT {
+                eligible_cards.push((&c, i))
+            }
+        }
+
+        for t in eligible_cards {
+            print!("{} <- {} \t", t.0.get_print_str(), t.1 + 1)
+        }
     }
 }

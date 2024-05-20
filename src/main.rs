@@ -32,6 +32,7 @@ fn main() {
 
     new_game.throw("as", 0);
     new_game.throw("bb", 1);
+    new_game.get_player_eligible_cards("b1b");
 
     println!("Hello, world!, {}", deck.total_len());
 }

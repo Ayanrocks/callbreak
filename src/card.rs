@@ -79,3 +79,65 @@ impl Card {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_new_card() {
+        let card = Card::new(Suit::Club, "2".to_string());
+
+        assert_eq!(card.value, "2");
+        assert_eq!(card.priority, 2);
+        assert_eq!(card.suit, Suit::Club);
+
+        let new_card = Card::new(Suit::Diamonds, "K".to_string());
+
+        assert_eq!(new_card.value, "K");
+        assert_eq!(new_card.priority, 13);
+        assert_eq!(new_card.suit, Suit::Diamonds);
+
+        let new_card_2 = Card::new(Suit::Hearts, "Q".to_string());
+
+        assert_eq!(new_card_2.value, "Q");
+        assert_eq!(new_card_2.priority, 12);
+        assert_eq!(new_card_2.suit, Suit::Hearts);
+
+        let new_card_3 = Card::new(Suit::Spade, "A".to_string());
+
+        assert_eq!(new_card_3.value, "A");
+        assert_eq!(new_card_3.priority, 14);
+        assert_eq!(new_card_3.suit, Suit::Spade);
+    }
+
+    #[test]
+    fn test_get_initial_priority() {
+        let card = Card::new(Suit::Club, "2".to_string());
+        assert_eq!(card.get_initial_priority("2"), 2)
+    }
+
+    #[test]
+    fn test_get_print_str() {
+        let card = Card::new(Suit::Club, "5".to_string());
+        assert_eq!(card.get_print_str(), "[ 5 ♣\u{fe0f} ]");
+    }
+
+    #[test]
+    fn test_get_value() {
+        let card = Card::new(Suit::Diamonds, "9".to_string());
+        assert_eq!(card.get_value(), "9");
+    }
+
+    #[test]
+    fn test_get_suit() {
+        let card = Card::new(Suit::Hearts, "9".to_string());
+        assert_eq!(card.get_suit(), Suit::Hearts);
+    }
+
+    #[test]
+    fn test_get_priority() {
+        let card = Card::new(Suit::Hearts, "J".to_string());
+        assert_eq!(card.get_priority(), 11);
+    }
+}
+

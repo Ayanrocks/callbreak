@@ -52,6 +52,7 @@ impl Player {
         idx
     }
 
+    /// throw throws the card and removes from the card for the player
     pub fn throw(&mut self, card_idx: usize) -> Card {
         self.cards.swap_remove(card_idx)
     }
@@ -70,8 +71,21 @@ impl Player {
             }
         }
 
-        for t in eligible_cards {
-            print!("{} <- {} \t", t.0.get_print_str(), t.1 + 1)
+        // if empty then entire deck can be used for
+        if eligible_cards.is_empty() {
+            for (i, c) in self.cards.iter().enumerate() {
+                eligible_cards.push((&c, i))
+            }
         }
+
+        println!();
+        for t in eligible_cards.iter() {
+            print!("{}", t.0.get_print_str())
+        }
+        println!();
+        for t in eligible_cards.iter() {
+            print!(" {}    ", t.1)
+        }
+        println!();
     }
 }

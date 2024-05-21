@@ -77,8 +77,54 @@ impl Deck {
             self.cards.swap(i, r)
         }
     }
-    
+
     pub fn distribute(&mut self) -> Card {
         self.cards.swap_remove(0)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::card::Suit;
+    use crate::deck::Deck;
+
+    #[test]
+    fn test_new_deck() {
+        let deck = Deck::new();
+
+        assert_eq!(deck.cards.len(), 52);
+        assert_eq!(deck.total_len(), 52);
+        assert_eq!(deck.cards[0].get_value(), "2");
+        assert_eq!(deck.cards[0].get_suit(), Suit::Hearts);
+        assert_eq!(deck.cards[0].get_priority(), 2);
+    }
+
+    #[test]
+    fn test_shuffle() {
+        let mut deck = Deck::new();
+
+        assert_eq!(deck.cards.len(), 52);
+        assert_eq!(deck.total_len(), 52);
+        assert_eq!(deck.cards[0].get_value(), "2");
+        assert_eq!(deck.cards[0].get_suit(), Suit::Hearts);
+        assert_eq!(deck.cards[0].get_priority(), 2);
+
+        deck.shuffle();
+
+        assert_ne!(deck.cards[0].get_value(), "2");
+        assert_ne!(deck.cards[0].get_suit(), Suit::Hearts);
+        assert_ne!(deck.cards[0].get_priority(), 2);
+    }
+
+    #[test]
+    fn test_distribute() {
+        let mut deck = Deck::new();
+        let card = deck.distribute();
+
+        assert_eq!(deck.cards.len(), 51);
+        assert_eq!(deck.total_len(), 51);
+        assert_eq!(card.get_value(), "2");
+        assert_eq!(card.get_suit(), Suit::Hearts);
+        assert_eq!(card.get_priority(), 2);
     }
 }

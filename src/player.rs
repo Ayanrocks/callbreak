@@ -89,3 +89,17 @@ impl Player {
         println!();
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_new_deck() {
+        let player = Player::new("test", &1234, Call::Two(2));
+
+        assert_eq!(player.cards.len(), 0);
+        assert_eq!(player.name, "test");
+    }
+}

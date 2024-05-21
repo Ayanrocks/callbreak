@@ -85,8 +85,7 @@ impl Deck {
 
 #[cfg(test)]
 mod tests {
-    use crate::card::Suit;
-    use crate::deck::Deck;
+    use super::*;
 
     #[test]
     fn test_new_deck() {

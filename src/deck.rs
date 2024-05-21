@@ -126,5 +126,8 @@ mod tests {
         assert_eq!(card.get_value(), "2");
         assert_eq!(card.get_suit(), Suit::Hearts);
         assert_eq!(card.get_priority(), 2);
+        assert_eq!(deck.cards[0].get_value(), "A");
+        assert_eq!(deck.cards[0].get_suit(), Suit::Diamonds);
+        assert_eq!(deck.cards[0].get_priority(), 14);
     }
 }

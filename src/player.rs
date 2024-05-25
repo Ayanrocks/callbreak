@@ -58,7 +58,7 @@ impl Player {
     }
 
     /// points to the eligible list of cards that the user needs to throw
-    pub fn get_eligible_cards(&self, lead_thrower: &Card) {
+    pub fn show_eligible_cards(&self, lead_thrower: &Card) {
         // check the lead thrower first
         let mut eligible_cards: Vec<(&Card, usize)> = vec![];
 
@@ -93,6 +93,8 @@ impl Player {
 
 #[cfg(test)]
 mod tests {
+    use crate::card::Suit;
+
     use super::*;
 
     #[test]
@@ -100,6 +102,59 @@ mod tests {
         let player = Player::new("test", &1234, Call::Two(2));
 
         assert_eq!(player.cards.len(), 0);
-        assert_eq!(player.name, "test");
+        assert_eq!(player.get_name(), "test");
+        assert_eq!(player.call, Call::Two(2));
+        assert_eq!(player.pin, 1234);
+    }
+
+    #[test]
+    fn test_add_cards() {
+        let mut player = Player::new("test", &1234, Call::Two(2));
+
+        player.add_card(Card::new(Suit::Diamonds, "J".to_string()));
+        player.add_card(Card::new(Suit::Diamonds, "K".to_string()));
+        player.add_card(Card::new(Suit::Diamonds, "A".to_string()));
+
+        assert_eq!(player.cards.len(), 3);
+        assert_eq!(player.cards[0].get_value(), "J");
+        assert_eq!(player.cards[1].get_value(), "K");
+        assert_eq!(player.cards[2].get_value(), "A");
+    }
+
+    #[test]
+    fn test_get_card_idx() {
+        let mut player = Player::new("test", &1234, Call::Two(2));
+
+        player.add_card(Card::new(Suit::Diamonds, "J".to_string()));
+        player.add_card(Card::new(Suit::Diamonds, "K".to_string()));
+        player.add_card(Card::new(Suit::Diamonds, "A".to_string()));
+
+        assert_eq!(player.get_card_idx("J"), 0);
+        assert_eq!(player.get_card_idx("K"), 1);
+        assert_eq!(player.get_card_idx("A"), 2);
+    }
+
+    #[test]
+    fn test_throw() {
+        let mut player = Player::new("test", &1234, Call::Two(2));
+
+        player.add_card(Card::new(Suit::Diamonds, "J".to_string()));
+        player.add_card(Card::new(Suit::Diamonds, "K".to_string()));
+        player.add_card(Card::new(Suit::Diamonds, "A".to_string()));
+
+        let card1 = player.throw(0);
+        assert_eq!(card1.get_value(), "J");
+        assert_eq!(card1.get_suit(), Suit::Diamonds);
+        assert_eq!(card1.get_priority(), 11);
+
+        let card2 = player.throw(1);
+        assert_eq!(card2.get_value(), "K");
+        assert_eq!(card2.get_suit(), Suit::Diamonds);
+        assert_eq!(card2.get_priority(), 13);
+
+        let card3 = player.throw(0);
+        assert_eq!(card3.get_value(), "A");
+        assert_eq!(card3.get_suit(), Suit::Diamonds);
+        assert_eq!(card3.get_priority(), 14);
     }
 }

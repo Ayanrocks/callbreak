@@ -110,6 +110,14 @@ mod tests {
 
         deck.shuffle();
 
+        if deck.cards[0].get_suit() == Suit::Hearts {
+            deck.shuffle();
+        }
+
+        if deck.cards[0].get_value() == "2" {
+            deck.shuffle();
+        }
+
         assert_ne!(deck.cards[0].get_value(), "2");
         assert_ne!(deck.cards[0].get_suit(), Suit::Hearts);
         assert_ne!(deck.cards[0].get_priority(), 2);

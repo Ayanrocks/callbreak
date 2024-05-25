@@ -31,7 +31,7 @@ struct Round<'a> {
     card: Card,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Call {
     Two(u8),
     Three(u8),
@@ -223,7 +223,7 @@ impl<'a> Game<'a> {
     pub fn get_player_eligible_cards(&self, name: &str) {
         let idx = self.get_player_index(name);
         let lead_card = Card::new(self.current_round.lead_thrower.suit, self.current_round.lead_thrower.value.to_string());
-        self.players[idx].get_eligible_cards(&lead_card);
+        self.players[idx].show_eligible_cards(&lead_card);
     }
 }
 

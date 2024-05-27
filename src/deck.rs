@@ -6,6 +6,8 @@ pub struct Deck {
     cards: Vec<Card>,
 }
 
+pub const DECK_LEN: u8 = 52;
+
 impl Deck {
     /// Initializes a new deck with all cards
     /// ```rust

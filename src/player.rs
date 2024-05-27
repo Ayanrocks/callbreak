@@ -6,6 +6,7 @@ pub struct Player {
     pin: u16,
     cards: Vec<Card>,
     call: Call,
+    points: u8,
 }
 
 impl Player {
@@ -15,6 +16,7 @@ impl Player {
             pin: *pin,
             cards: vec![],
             call,
+            points: 0,
         }
     }
 
@@ -88,6 +90,10 @@ impl Player {
         }
         println!();
     }
+
+    pub fn add_points(&mut self, points: u8) {
+        self.points += points
+    }
 }
 
 
@@ -156,5 +162,18 @@ mod tests {
         assert_eq!(card3.get_value(), "A");
         assert_eq!(card3.get_suit(), Suit::Diamonds);
         assert_eq!(card3.get_priority(), 14);
+    }
+
+    #[test]
+    fn test_add_points() {
+        let mut player = Player::new("test", &1234, Call::Two(2));
+        player.add_points(1);
+        assert_eq!(player.points, 1);
+
+        player.add_points(1);
+        assert_eq!(player.points, 2);
+
+        player.add_points(1);
+        assert_eq!(player.points, 3);
     }
 }

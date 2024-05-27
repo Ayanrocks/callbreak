@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 
-use rand::distributions::uniform::SampleBorrow;
-
 use crate::card::{Card, Suit, TRUMP_SUIT};
+use crate::deck;
 use crate::deck::Deck;
 use crate::player::Player;
 
@@ -11,6 +10,8 @@ pub struct Game<'a> {
     players: Vec<Player>,
     default_calls: HashMap<u8, Call>,
     current_round: Trick<'a>,
+    total_rounds_count: u8,
+    current_round_no: u8,
 }
 
 struct Trick<'a> {
@@ -55,6 +56,8 @@ impl<'a> Game<'a> {
             players: vec![],
             default_calls: HashMap::new(),
             current_round: Trick::new(),
+            current_round_no: 0,
+            total_rounds_count: 0,
         };
 
         game.initiate_calls();
@@ -114,11 +117,9 @@ impl<'a> Game<'a> {
             }
         }
 
-        self.players[0].reveal(1234.borrow());
-        self.players[1].reveal(1234.borrow());
-        self.players[2].reveal(1234.borrow());
-        self.players[3].reveal(1234.borrow());
+        self.total_rounds_count = deck::DECK_LEN / self.players.len() as u8;
     }
+
 
     /// get_player_index returns the player index with the player name
     fn get_player_index(&self, player_name: &str) -> usize {
@@ -136,7 +137,7 @@ impl<'a> Game<'a> {
     pub fn throw(&mut self, player_name: &'a str, card_idx: usize) {
         // check if this is a new round or an existing round
         let mut is_new_round = true;
-        if !self.current_round.rounds.is_empty() {
+        if !self.current_round.rounds.is_empty() && !self.current_round.winner.player.is_empty() {
             is_new_round = false
         }
         // throw the current players card to the
@@ -145,6 +146,7 @@ impl<'a> Game<'a> {
         let throwable_card = self.players[player_idx].throw(card_idx);
         // get the current winner of the round
         if is_new_round {
+            self.current_round_no += 1;
             self.current_round.winner = Participant {
                 player: player_name,
                 suit: throwable_card.get_suit(),
@@ -173,6 +175,17 @@ impl<'a> Game<'a> {
 
             // get the current winner
             self.get_round_winner();
+        }
+
+        // check if round is finished
+        if self.current_round.rounds.len() == self.players.len() {
+            // add points to the winner
+        }
+
+
+        // it's the final round
+        if self.current_round_no == self.total_rounds_count {
+            // Check who won the game
         }
     }
 
@@ -225,6 +238,19 @@ impl<'a> Game<'a> {
         let lead_card = Card::new(self.current_round.lead_thrower.suit, self.current_round.lead_thrower.value.to_string());
         self.players[idx].show_eligible_cards(&lead_card);
     }
+
+    // add_points_to_winner adds the points to the current winner
+    fn add_points_to_winner(&mut self) {
+        let lead_winner = &self.current_round.lead_thrower;
+
+        // find the winner index
+        for p in self.players.iter_mut() {
+            if p.get_name() == lead_winner.player {
+                p.add_points(1);
+                break;
+            }
+        }
+    }
 }
 
 impl<'a> Trick<'a> {
@@ -233,7 +259,7 @@ impl<'a> Trick<'a> {
             rounds: vec![],
             winner: Participant {
                 player: "",
-                suit: (TRUMP_SUIT),
+                suit: TRUMP_SUIT,
                 priority: 0,
                 value: "".to_string(),
             },

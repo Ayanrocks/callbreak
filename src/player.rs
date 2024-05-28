@@ -94,6 +94,10 @@ impl Player {
     pub fn add_points(&mut self, points: u8) {
         self.points += points
     }
+
+    pub fn get_points(&self) -> u8 {
+        self.points
+    }
 }
 
 

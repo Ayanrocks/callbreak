@@ -180,12 +180,15 @@ impl<'a> Game<'a> {
         // check if round is finished
         if self.current_round.rounds.len() == self.players.len() {
             // add points to the winner
+            self.add_points_to_winner();
+            self.clear_round();
         }
 
 
         // it's the final round
         if self.current_round_no == self.total_rounds_count {
             // Check who won the game
+            self.find_game_winner();
         }
     }
 
@@ -249,6 +252,21 @@ impl<'a> Game<'a> {
                 p.add_points(1);
                 break;
             }
+        }
+    }
+
+    fn find_game_winner(&self) {
+        let mut max_points = 0;
+        let mut player = "";
+        for p in self.players.iter() {
+            if max_points < p.get_points() {
+                max_points = p.get_points();
+                player = p.get_name();
+            }
+        }
+
+        if !player.is_empty() {
+            println!("{} Won the game", player)
         }
     }
 }

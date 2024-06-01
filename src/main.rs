@@ -10,6 +10,7 @@ mod card;
 mod deck;
 mod player;
 mod game;
+mod cli;
 
 fn main() {
     let card = Card::new(Suit::Club, "2".to_string());
@@ -35,4 +36,6 @@ fn main() {
     new_game.get_player_eligible_cards("b1b");
 
     println!("Hello, world!, {}", deck.total_len());
+
+    cli::CLI::new_cli();
 }

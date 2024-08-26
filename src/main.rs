@@ -1,18 +1,18 @@
-use rand::distributions::uniform::SampleBorrow;
-
 use card::{Card, Suit};
 use deck::Deck;
 use player::Player;
+use rand::distributions::uniform::SampleBorrow;
+use std::io;
 
 use crate::game::{Call, Game};
 
 mod card;
-mod deck;
-mod player;
-mod game;
 mod cli;
+mod deck;
+mod game;
+mod player;
 
-fn main() {
+fn main() -> io::Result<()> {
     let card = Card::new(Suit::Club, "2".to_string());
     card.print();
 
@@ -37,5 +37,5 @@ fn main() {
 
     println!("Hello, world!, {}", deck.total_len());
 
-    cli::CLI::new_cli();
+    cli::CLI::new_cli()
 }

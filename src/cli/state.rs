@@ -3,6 +3,7 @@ use ratatui::{
     buffer::Buffer,
     crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind},
     layout::{Alignment, Rect},
+    prelude::Backend,
     style::Stylize,
     symbols::border,
     text::{Line, Text},
@@ -10,29 +11,110 @@ use ratatui::{
         block::{Position, Title},
         Block, Paragraph, Widget,
     },
-    Frame,
+    Frame, Terminal,
 };
 use std::io;
 
-#[derive(Debug, Default)]
-pub struct State {
-    pub counter: u32,
-    pub exit: bool,
+use crate::game::Game;
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum CurrentScreen {
+    Main,
+    Playing,
+    Exiting,
 }
 
-impl State {
-    pub fn run(&mut self, terminal: &mut super::tui::Tui) -> io::Result<()> {
-        while !self.exit {
-            terminal.draw(|frame| self.render_frame(frame))?;
-            self.handle_events().wrap_err("handle events failed");
+#[derive(Debug, Default)]
+pub struct State<'a> {
+    game: Game<'a>,
+    current_screen: CurrentScreen,
+}
+
+impl<'a> State<'a> {
+    pub fn run_app<B: Backend>(&mut self, terminal: &mut Terminal<B>) -> io::Result<bool> {
+        loop {
+            terminal.draw(|f| self.render_ui(f))?;
+
+            if let Event::Key(key) = event::read()? {
+                if key.kind == event::KeyEventKind::Release {
+                    // Skip events that are not KeyEventKind::Press
+                    continue;
+                }
+                match app.current_screen {
+                    CurrentScreen::Main => match key.code {
+                        KeyCode::Char('e') => {
+                            app.current_screen = CurrentScreen::Editing;
+                            app.currently_editing = Some(CurrentlyEditing::Key);
+                        }
+                        KeyCode::Char('q') => {
+                            app.current_screen = CurrentScreen::Exiting;
+                        }
+                        _ => {}
+                    },
+                    CurrentScreen::Exiting => match key.code {
+                        KeyCode::Char('y') => {
+                            return Ok(true);
+                        }
+                        KeyCode::Char('n') | KeyCode::Char('q') => {
+                            return Ok(false);
+                        }
+                        _ => {}
+                    },
+                    CurrentScreen::Editing if key.kind == KeyEventKind::Press => match key.code {
+                        KeyCode::Enter => {
+                            if let Some(editing) = &app.currently_editing {
+                                match editing {
+                                    CurrentlyEditing::Key => {
+                                        app.currently_editing = Some(CurrentlyEditing::Value);
+                                    }
+                                    CurrentlyEditing::Value => {
+                                        app.save_key_value();
+                                        app.current_screen = CurrentScreen::Main;
+                                    }
+                                }
+                            }
+                        }
+                        KeyCode::Backspace => {
+                            if let Some(editing) = &app.currently_editing {
+                                match editing {
+                                    CurrentlyEditing::Key => {
+                                        app.key_input.pop();
+                                    }
+                                    CurrentlyEditing::Value => {
+                                        app.value_input.pop();
+                                    }
+                                }
+                            }
+                        }
+                        KeyCode::Esc => {
+                            app.current_screen = CurrentScreen::Main;
+                            app.currently_editing = None;
+                        }
+                        KeyCode::Tab => {
+                            app.toggle_editing();
+                        }
+                        KeyCode::Char(value) => {
+                            if let Some(editing) = &app.currently_editing {
+                                match editing {
+                                    CurrentlyEditing::Key => {
+                                        app.key_input.push(value);
+                                    }
+                                    CurrentlyEditing::Value => {
+                                        app.value_input.push(value);
+                                    }
+                                }
+                            }
+                        }
+                        _ => {}
+                    },
+                    _ => {}
+                }
+            }
         }
-
-        Ok(())
     }
 
-    fn render_frame(&self, frame: &mut Frame) {
-        frame.render_widget(self, frame.size());
-    }
+    fn render_ui()
+
 
     fn handle_events(&mut self) -> io::Result<()> {
         match event::read()? {
@@ -44,60 +126,5 @@ impl State {
             _ => {}
         };
         Ok(())
-    }
-
-    fn handle_key_event(&mut self, key_event: KeyEvent) {
-        match key_event.code {
-            KeyCode::Char('q') => self.exit(),
-            KeyCode::Left => self.decrement_counter(),
-            KeyCode::Right => self.increment_counter(),
-            _ => {}
-        }
-    }
-
-    fn exit(&mut self) {
-        self.exit = true;
-    }
-
-    fn increment_counter(&mut self) {
-        self.counter += 1;
-    }
-
-    fn decrement_counter(&mut self) {
-        self.counter -= 1;
-    }
-}
-
-impl Widget for &State {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        let title = Title::from(" CallBreak ".bold());
-        let subTitle = Title::from("By Ayan Banerjee");
-        let instructions = Title::from(Line::from(vec![
-            " Decrement ".into(),
-            "<Left>".blue().bold(),
-            " Increment ".into(),
-            "<Right>".blue().bold(),
-            " Quit ".into(),
-            "<Q> ".blue().bold(),
-        ]));
-        let block = Block::bordered()
-            .title(title.alignment(Alignment::Center))
-            .title(subTitle.alignment(Alignment::Right))
-            .title(
-                instructions
-                    .alignment(Alignment::Center)
-                    .position(Position::Bottom),
-            )
-            .border_set(border::THICK);
-
-        let counter_text = Text::from(vec![Line::from(vec![
-            "Value: ".into(),
-            self.counter.to_string().yellow(),
-        ])]);
-
-        Paragraph::new(counter_text)
-            .centered()
-            .block(block)
-            .render(area, buf);
     }
 }

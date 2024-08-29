@@ -40,7 +40,17 @@ impl<'a> State<'a> {
     pub fn run_app<B: Backend>(&mut self, terminal: &mut Terminal<B>) -> io::Result<bool> {
         loop {
             terminal.draw(|f| self.render_frame(f))?;
-            self.handle_events()?;
+            let exit_result = self.handle_events();
+
+            match exit_result {
+                Ok(true) => {
+                    return Ok(true);
+                }
+                Err(err) => {
+                    return Err(err);
+                }
+                _ => {}
+            }
         }
     }
 
@@ -59,8 +69,8 @@ impl<'a> State<'a> {
             if let KeyCode::Char('q') = key.code {
                 self.current_screen = CurrentScreen::Exiting;
                 return Ok(true);
-            }
+            } 
         }
-        Ok(true)
+        Ok(false)
     }
 }

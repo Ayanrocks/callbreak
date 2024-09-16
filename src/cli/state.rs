@@ -85,8 +85,46 @@ impl<'a> State<'a> {
             }
             match self.current_screen {
                 CurrentScreen::NewGame => match self.current_popup {
-                    Popups::NewGamePopups(NewGamePopups::NumberOfPlayers)
-                    | Popups::NewGamePopups(NewGamePopups::PlayerNames) => match key.code {
+                    Popups::NewGamePopups(NewGamePopups::NumberOfPlayers) => match key.code {
+                        KeyCode::Delete => {
+                            self.input_buffer.pop();
+                        }
+                        KeyCode::Backspace => {
+                            self.input_buffer.pop();
+                        }
+
+                        KeyCode::Enter => {
+                            if let Popups::NewGamePopups(NewGamePopups::NumberOfPlayers) =
+                                self.current_popup
+                            {
+                                let total_players = self.input_buffer.parse().unwrap();
+                                if total_players < 4 {
+                                    self.set_popup_state(Popups::NewGamePopups(
+                                        NewGamePopups::PlayerNames,
+                                    ));
+                                    self.total_players = total_players;
+                                    self.input_buffer.clear();
+                                } else {
+                                    // error component
+                                }
+                            }
+                        }
+
+                        KeyCode::Char('q') => {
+                            self.current_screen = CurrentScreen::Exiting;
+                        }
+
+                        _ => {
+                            // check if the input is an number or not
+                            match key.code.to_string().parse::<i32>() {
+                                Ok(m) => {
+                                    self.input_buffer.push_str(&key.code.to_string());
+                                }
+                                _ => {}
+                            }
+                        }
+                    },
+                    Popups::NewGamePopups(NewGamePopups::PlayerNames) => match key.code {
                         KeyCode::Delete => {
                             self.input_buffer.pop();
                         }
@@ -99,23 +137,30 @@ impl<'a> State<'a> {
                                 self.set_popup_state(Popups::NewGamePopups(
                                     NewGamePopups::PlayerNames,
                                 ));
-                                self.total_players = self.input_buffer.parse().unwrap();
+                                self.total_players =
+                                    self.input_buffer.parse().expect("Please enter");
                                 self.input_buffer.clear();
                             }
-                            Popups::NewGamePopups(NewGamePopups::PlayerNames) => {}
-                            _ => {}
+                            Popups::NewGamePopups(NewGamePopups::PlayerNames) => {
+                                match self.current_popup {
+                                    Popups::NewGamePopups(NewGamePopups::PlayerNames) => {
+                                        // self.game.add_player(&self.input_buffer);
+                                        self.input_buffer.clear();
+                                    }
+                                    _ => {}
+                                }
+                            }
+
+                            _ => {
+                                self.input_buffer.push_str(&key.code.to_string());
+                            }
                         },
 
-                        KeyCode::Char('q') => {
-                            self.current_screen = CurrentScreen::Exiting;
-                        }
-
-                        _ => {
-                            self.input_buffer.push_str(&key.code.to_string());
-                        }
+                        _ => {}
                     },
                     _ => {}
                 },
+
                 CurrentScreen::Exiting => match key.code {
                     KeyCode::Char('y') => {
                         return Ok(true);

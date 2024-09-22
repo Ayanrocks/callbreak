@@ -13,7 +13,7 @@ pub fn draw_main_screen(frame: &mut Frame, state: &mut State) {
     let layouts = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Min(2), Constraint::Length(3)].as_ref())
-        .split(frame.size());
+        .split(frame.area());
 
     let title = Title::from("  Callbreak  ".bold());
     let sub_title = Title::from(" By Ayan Banerjee ");
@@ -54,9 +54,18 @@ pub fn draw_main_screen(frame: &mut Frame, state: &mut State) {
         // options
         {
             match state.current_screen {
-                CurrentScreen::NewGame => Span::styled("(q) to quit / [Enter] to Select", Style::default().fg(Color::White)),
-                CurrentScreen::Main => Span::styled("(q) to quit / (n) to start new game", Style::default().fg(Color::White)),
-                CurrentScreen::Exiting => Span::styled("(y) for Yes / (n) for No", Style::default().fg(Color::White)),
+                CurrentScreen::NewGame => Span::styled(
+                    "(q) to quit / [Enter] to Select",
+                    Style::default().fg(Color::White),
+                ),
+                CurrentScreen::Main => Span::styled(
+                    "(q) to quit / (n) to start new game",
+                    Style::default().fg(Color::White),
+                ),
+                CurrentScreen::Exiting => Span::styled(
+                    "(y) for Yes / (n) for No",
+                    Style::default().fg(Color::White),
+                ),
             }
         },
     ];
@@ -66,6 +75,10 @@ pub fn draw_main_screen(frame: &mut Frame, state: &mut State) {
         .block(Block::default().borders(Borders::ALL));
 
     frame.render_widget(footer, layouts[1]);
+
+    if !state.error.is_empty() {
+        draw_error_modal(frame, state, layouts[1]);
+    }
 }
 
 fn draw_new_game_popup(frame: &mut Frame, state: &mut State) {
@@ -115,6 +128,15 @@ fn draw_new_game_popup(frame: &mut Frame, state: &mut State) {
         .style(Style::default().fg(Color::White));
 
     frame.render_widget(footer, popup_chunks[2]);
+}
+
+fn draw_error_modal(frame: &mut Frame, state: &State, rect: Rect) {
+    frame.render_widget(Clear, rect);
+    let error_modal = Paragraph::new(state.error.to_owned())
+        .block(Block::default().borders(Borders::ALL))
+        .bg(Color::Red);
+
+    frame.render_widget(error_modal, rect);
 }
 
 fn draw_new_game_popup_with_player(frame: &mut Frame, state: &mut State) {

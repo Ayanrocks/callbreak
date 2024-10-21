@@ -1,13 +1,12 @@
-use color_eyre::owo_colors::OwoColorize;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style, Stylize},
     text::{Line, Span},
-    widgets::{block::Title, Block, Borders, Clear, Padding, Paragraph, Wrap},
+    widgets::{block::Title, Block, Borders, Clear, Paragraph, Wrap},
     Frame,
 };
 
-use super::state::{CurrentScreen, NewGamePopups, Popups, State};
+use super::state::{CurrentScreen, NewGamePopups, PlayerNamePopups, Popups, State};
 
 pub fn draw_main_screen(frame: &mut Frame, state: &mut State) {
     let layouts = Layout::default()
@@ -33,18 +32,22 @@ pub fn draw_main_screen(frame: &mut Frame, state: &mut State) {
             Popups::NewGamePopups(NewGamePopups::NumberOfPlayers) => {
                 draw_new_game_popup(frame, state)
             }
-            Popups::NewGamePopups(NewGamePopups::PlayerNames) => {
+            Popups::NewGamePopups(NewGamePopups::PlayerNames(PlayerNamePopups::PlayerName))
+            | Popups::NewGamePopups(NewGamePopups::PlayerNames(PlayerNamePopups::PlayerPin))
+            | Popups::NewGamePopups(NewGamePopups::PlayerNames(PlayerNamePopups::PlayerCall)) => {
                 draw_new_game_popup_with_player(frame, state)
             }
             _ => {}
         }
-        draw_new_game_popup(frame, state);
     }
 
     // footer section with options
     let footer_options = vec![
         match state.current_screen {
-            CurrentScreen::NewGame => Span::styled("New Game", Style::default().fg(Color::Green)),
+            CurrentScreen::NewGame => Span::styled(
+                format!("New Game: {}", state.current_popup),
+                Style::default().fg(Color::Green),
+            ),
             CurrentScreen::Main => Span::styled("Main Screen", Style::default().fg(Color::Yellow)),
             CurrentScreen::Exiting => Span::styled("Exiting", Style::default().fg(Color::LightRed)),
         }
@@ -82,7 +85,7 @@ pub fn draw_main_screen(frame: &mut Frame, state: &mut State) {
 }
 
 fn draw_new_game_popup(frame: &mut Frame, state: &mut State) {
-    frame.render_widget(Clear, frame.area());
+    // frame.render_widget(Clear, frame.area());
     let popup_layout = centered_rect(50, 40, frame.area());
     let popup = Block::default()
         .title(Title::from(" New Game ").alignment(Alignment::Center))
@@ -94,14 +97,7 @@ fn draw_new_game_popup(frame: &mut Frame, state: &mut State) {
     let popup_chunks = Layout::default()
         .direction(Direction::Vertical)
         .margin(1)
-        .constraints(
-            [
-                Constraint::Length(4),
-                Constraint::Length(4),
-                Constraint::Length(3),
-            ]
-            .as_ref(),
-        )
+        .constraints([Constraint::Length(4), Constraint::Length(3)].as_ref())
         .split(popup_layout);
 
     let header = Title::from("Enter the number of players to be playing: ");
@@ -113,21 +109,15 @@ fn draw_new_game_popup(frame: &mut Frame, state: &mut State) {
     let header_body = Paragraph::new(state.input_buffer.clone())
         .style(Style::new().bold().fg(Color::Black))
         .block(header_block)
-        .wrap(Wrap { trim: true });
+        .wrap(Wrap { trim: false });
 
     frame.render_widget(header_body, popup_chunks[0]);
 
-    let body = Block::default()
-        .borders(Borders::ALL)
-        .style(Style::default().fg(Color::White).bg(Color::Cyan));
-
-    frame.render_widget(body, popup_chunks[1]);
-
-    let footer = Paragraph::new(Line::from("Press 'q' to exit"))
+    let footer = Paragraph::new(Line::from("Press 'ESC' to exit"))
         .block(Block::default().borders(Borders::ALL))
         .style(Style::default().fg(Color::White));
 
-    frame.render_widget(footer, popup_chunks[2]);
+    frame.render_widget(footer, popup_chunks[1]);
 }
 
 fn draw_error_modal(frame: &mut Frame, state: &State, rect: Rect) {
@@ -140,7 +130,7 @@ fn draw_error_modal(frame: &mut Frame, state: &State, rect: Rect) {
 }
 
 fn draw_new_game_popup_with_player(frame: &mut Frame, state: &mut State) {
-    frame.render_widget(Clear, frame.area());
+    // frame.render_widget(Clear, frame.area());
     let popup_layout = centered_rect(50, 40, frame.area());
     let popup = Block::default()
         .title(Title::from(" New Game ").alignment(Alignment::Center))
@@ -156,36 +146,81 @@ fn draw_new_game_popup_with_player(frame: &mut Frame, state: &mut State) {
             [
                 Constraint::Length(4),
                 Constraint::Length(4),
+                Constraint::Length(4),
                 Constraint::Length(3),
             ]
             .as_ref(),
         )
         .split(popup_layout);
 
-    let header = Title::from("Enter the name of the player: ");
+    let header = vec![match state.current_popup {
+        Popups::NewGamePopups(NewGamePopups::PlayerNames(PlayerNamePopups::PlayerName)) => {
+            Span::styled(
+                "Enter the name of the player: ",
+                Style::default().fg(Color::White),
+            )
+        }
+        Popups::NewGamePopups(NewGamePopups::PlayerNames(PlayerNamePopups::PlayerPin)) => {
+            Span::styled(
+                "Enter the pin of the player: ",
+                Style::default().fg(Color::White),
+            )
+        }
+        Popups::NewGamePopups(NewGamePopups::PlayerNames(PlayerNamePopups::PlayerCall)) => {
+            Span::styled(
+                "Enter the call of the player: ",
+                Style::default().fg(Color::White),
+            )
+        }
+        _ => Span::from(""),
+    }
+    .to_owned()];
 
-    let header_block = Block::default()
-        .title(header)
+    let header_block = Block::new()
+        .title(Line::from(header))
         .style(Style::default().bg(Color::Yellow).fg(Color::White));
 
-    let header_body = Paragraph::new(state.input_buffer.clone())
+    let player_name_header = Title::from("Enter the name of the player: ");
+
+    let player_name_block = Block::default()
+        .title(player_name_header)
+        .style(Style::default().bg(Color::Yellow).fg(Color::White));
+
+    let player_name_body = Paragraph::new(state.input_buffer.clone())
         .style(Style::new().bold().fg(Color::Black))
-        .block(header_block)
+        .block(player_name_block)
         .wrap(Wrap { trim: true });
 
-    frame.render_widget(header_body, popup_chunks[0]);
+    let player_pin_header = Title::from("Enter the pin of the player: ");
 
-    let body = Block::default()
-        .borders(Borders::ALL)
-        .style(Style::default().fg(Color::White).bg(Color::Cyan));
+    let player_pin_block = Block::default()
+        .title(player_pin_header)
+        .style(Style::default().bg(Color::Yellow).fg(Color::White));
 
-    frame.render_widget(body, popup_chunks[1]);
+    let player_pin_body = Paragraph::new(state.input_buffer.clone()).block(player_pin_block);
 
-    let footer = Paragraph::new(Line::from("Press 'q' to exit"))
+    let player_call_header = Title::from("Enter the call of the player: ");
+
+    let player_call_block = Block::default()
+        .title(player_call_header)
+        .style(Style::default().bg(Color::Yellow).fg(Color::White));
+
+    let player_call_body = Paragraph::new(state.input_buffer.clone()).block(player_call_block);
+
+    // let header_body = Paragraph::new(state.input_buffer.clone())
+    //     .style(Style::new().bold().fg(Color::Black))
+    //     .block(header_block)
+    //     .wrap(Wrap { trim: true });
+
+    frame.render_widget(player_name_body, popup_chunks[0]);
+    frame.render_widget(player_pin_body, popup_chunks[1]);
+    frame.render_widget(player_call_body, popup_chunks[2]);
+
+    let footer = Paragraph::new(Line::from("Press 'ESC' to exit"))
         .block(Block::default().borders(Borders::ALL))
         .style(Style::default().fg(Color::White));
 
-    frame.render_widget(footer, popup_chunks[2]);
+    frame.render_widget(footer, popup_chunks[3]);
 }
 
 /// helper function to create a centered rect using up certain percentage of the available rect `r`

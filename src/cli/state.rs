@@ -12,9 +12,12 @@ use ratatui::{
     },
     Frame, Terminal,
 };
-use std::io;
+use std::{fmt::Display, io};
 
-use crate::game::Game;
+use crate::{
+    game::{Call, Game},
+    player::Player,
+};
 
 use super::ui;
 
@@ -25,13 +28,20 @@ pub enum CurrentScreen {
     Exiting,
 }
 
-#[derive(PartialEq)]
-pub enum NewGamePopups {
-    NumberOfPlayers,
-    PlayerNames,
+#[derive(PartialEq, Debug)]
+pub enum PlayerNamePopups {
+    PlayerName,
+    PlayerPin,
+    PlayerCall,
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
+pub enum NewGamePopups {
+    NumberOfPlayers,
+    PlayerNames(PlayerNamePopups),
+}
+
+#[derive(PartialEq, Debug)]
 pub enum Popups {
     None,
     NewGamePopups(NewGamePopups),
@@ -43,7 +53,19 @@ pub struct State<'a> {
     pub current_popup: Popups,
     pub total_players: u8,
     pub input_buffer: String,
+    pub temp_player_name: String,
+    pub temp_player_pin: u16,
+    pub temp_player_call: u8,
     pub error: String,
+}
+
+impl Display for Popups {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Popups::None => write!(f, "None"),
+            Popups::NewGamePopups(popup) => write!(f, "NewGame({:?})", popup),
+        }
+    }
 }
 
 impl<'a> State<'a> {
@@ -54,6 +76,9 @@ impl<'a> State<'a> {
             current_popup: Popups::None,
             input_buffer: String::new(),
             total_players: 0,
+            temp_player_name: String::new(),
+            temp_player_pin: 0,
+            temp_player_call: 0,
             error: String::from(""),
         }
     }
@@ -87,7 +112,17 @@ impl<'a> State<'a> {
                 return Ok(true);
             }
             match self.current_screen {
+                CurrentScreen::Main => match key.code {
+                    KeyCode::Char('n') => {
+                        self.set_current_screen_new_game();
+                    }
+                    KeyCode::Char('q') => {
+                        self.current_screen = CurrentScreen::Exiting;
+                    }
+                    _ => {}
+                },
                 CurrentScreen::NewGame => match self.current_popup {
+                    // New Game Screen with Number of players as active popup
                     Popups::NewGamePopups(NewGamePopups::NumberOfPlayers) => match key.code {
                         KeyCode::Delete => {
                             self.input_buffer.pop();
@@ -105,7 +140,9 @@ impl<'a> State<'a> {
                                     Ok(total_players) => {
                                         if total_players < 5 {
                                             self.set_popup_state(Popups::NewGamePopups(
-                                                NewGamePopups::PlayerNames,
+                                                NewGamePopups::PlayerNames(
+                                                    PlayerNamePopups::PlayerName,
+                                                ),
                                             ));
                                             self.total_players = total_players;
                                             self.input_buffer.clear();
@@ -121,6 +158,10 @@ impl<'a> State<'a> {
                             }
                         }
 
+                        KeyCode::Esc => {
+                            self.set_current_screen(CurrentScreen::Exiting);
+                        }
+
                         KeyCode::Char('q') => {
                             self.current_screen = CurrentScreen::Exiting;
                         }
@@ -132,7 +173,16 @@ impl<'a> State<'a> {
                             }
                         }
                     },
-                    Popups::NewGamePopups(NewGamePopups::PlayerNames) => match key.code {
+                    // New Game Screen with Player Names as active popup
+                    Popups::NewGamePopups(NewGamePopups::PlayerNames(
+                        PlayerNamePopups::PlayerName,
+                    ))
+                    | Popups::NewGamePopups(NewGamePopups::PlayerNames(
+                        PlayerNamePopups::PlayerPin,
+                    ))
+                    | Popups::NewGamePopups(NewGamePopups::PlayerNames(
+                        PlayerNamePopups::PlayerCall,
+                    )) => match key.code {
                         KeyCode::Delete => {
                             self.input_buffer.pop();
                         }
@@ -141,11 +191,49 @@ impl<'a> State<'a> {
                         }
 
                         KeyCode::Enter => {
-                            if let Popups::NewGamePopups(NewGamePopups::PlayerNames) =
-                                self.current_popup
-                            {
+                            if self.temp_player_name.is_empty() {
+                                self.temp_player_name = self.input_buffer.clone();
                                 self.input_buffer.clear();
+                            } else if !self.temp_player_name.is_empty() && self.temp_player_pin == 0
+                            {
+                                let pin_result = self.input_buffer.parse();
+                                match pin_result {
+                                    Ok(pin) => {
+                                        self.temp_player_pin = pin;
+                                        self.input_buffer.clear();
+                                    }
+                                    Err(e) => self.set_error(e.to_string()),
+                                }
+                            } else if !self.temp_player_name.is_empty()
+                                && self.temp_player_pin != 0
+                                && self.temp_player_call == 0
+                            {
+                                let call_result = self.input_buffer.parse();
+                                match call_result {
+                                    Ok(call) => {
+                                        self.temp_player_call = call;
+                                        self.input_buffer.clear();
+                                    }
+                                    Err(e) => self.set_error(e.to_string()),
+                                }
+
+                                self.game.add_players(
+                                    &self.temp_player_name,
+                                    &self.temp_player_pin,
+                                    self.temp_player_call,
+                                );
+
+                                if self.game.get_player_count() == self.total_players as usize {
+                                    self.set_current_screen(CurrentScreen::Main);
+                                    self.set_popup_state(Popups::None);
+                                }
+
+                                self.clear_temp_player();
                             }
+                        }
+
+                        KeyCode::Esc => {
+                            self.set_current_screen(CurrentScreen::Exiting);
                         }
 
                         _ => {
@@ -160,21 +248,12 @@ impl<'a> State<'a> {
                         return Ok(true);
                     }
                     KeyCode::Char('n') => {
+                        // TODO: Instead of reseting to main, we should reset to the previous screen by keeping a stack of screens
+                        self.input_buffer.clear();
                         self.current_screen = CurrentScreen::Main;
                     }
                     _ => {}
                 },
-                _ => {}
-            }
-
-            // insert logic to handle key events here
-            match key.code {
-                KeyCode::Char('q') => {
-                    self.current_screen = CurrentScreen::Exiting;
-                }
-                KeyCode::Char('n') => {
-                    self.set_current_screen_new_game();
-                }
                 _ => {}
             }
         }
@@ -200,5 +279,11 @@ impl<'a> State<'a> {
 
     pub fn set_popup_state(&mut self, popup: Popups) {
         self.current_popup = popup;
+    }
+
+    fn clear_temp_player(&mut self) {
+        self.temp_player_name.clear();
+        self.temp_player_pin = 0;
+        self.temp_player_call = 0;
     }
 }

@@ -75,7 +75,6 @@ impl<'a> Game<'a> {
         self.default_calls.insert(8, Call::Eight(8));
     }
 
-
     /// add_players adds individual player with a specific pin and a call value
     // TODO: return Result or error from this function
     pub fn add_players(&mut self, name: &str, pin: &u16, call: u8) {
@@ -88,11 +87,13 @@ impl<'a> Game<'a> {
             }
         }
 
-        let player_call = self.default_calls.get(&call).expect("invalid call supplied");
+        let player_call = self
+            .default_calls
+            .get(&call)
+            .expect("invalid call supplied");
         let new_player = Player::new(name, pin, *player_call);
         self.players.push(new_player);
     }
-
 
     /// starts the game by shuffling and giving equal number of cards to the players
     pub fn start(&mut self) {
@@ -119,7 +120,6 @@ impl<'a> Game<'a> {
 
         self.total_rounds_count = deck::DECK_LEN / self.players.len() as u8;
     }
-
 
     /// get_player_index returns the player index with the player name
     fn get_player_index(&self, player_name: &str) -> usize {
@@ -184,7 +184,6 @@ impl<'a> Game<'a> {
             self.clear_round();
         }
 
-
         // it's the final round
         if self.current_round_no == self.total_rounds_count {
             // Check who won the game
@@ -210,27 +209,35 @@ impl<'a> Game<'a> {
                 // get the highest suit if the current winning suit is 'spade'
                 if self.current_round.winner.suit == TRUMP_SUIT {
                     if s.card.get_priority() > self.current_round.winner.priority {
-                        self.current_round.winner = Participant::new(s.player,
-                                                                     s.card.get_suit(),
-                                                                     s.card.get_priority(),
-                                                                     s.card.get_value().to_string());
+                        self.current_round.winner = Participant::new(
+                            s.player,
+                            s.card.get_suit(),
+                            s.card.get_priority(),
+                            s.card.get_value().to_string(),
+                        );
                     }
                 } else {
                     // if the current winner is not spade then by default spade wins
-                    self.current_round.winner = Participant::new(s.player,
-                                                                 s.card.get_suit(),
-                                                                 s.card.get_priority(),
-                                                                 s.card.get_value().to_string());
+                    self.current_round.winner = Participant::new(
+                        s.player,
+                        s.card.get_suit(),
+                        s.card.get_priority(),
+                        s.card.get_value().to_string(),
+                    );
                 }
             } else if self.current_round.winner.suit != TRUMP_SUIT {
                 // if the current winner is not spade then we need to see if the lead thrower and the current thrower
                 // has the same suit, then we need to check for the priority and decide the winner
                 // check for a higher priority card
-                if s.card.get_priority() > self.current_round.winner.priority && s.card.get_suit() == self.current_round.lead_thrower.suit {
-                    self.current_round.winner = Participant::new(s.player,
-                                                                 s.card.get_suit(),
-                                                                 s.card.get_priority(),
-                                                                 s.card.get_value().to_string());
+                if s.card.get_priority() > self.current_round.winner.priority
+                    && s.card.get_suit() == self.current_round.lead_thrower.suit
+                {
+                    self.current_round.winner = Participant::new(
+                        s.player,
+                        s.card.get_suit(),
+                        s.card.get_priority(),
+                        s.card.get_value().to_string(),
+                    );
                 }
             }
         }
@@ -238,7 +245,10 @@ impl<'a> Game<'a> {
 
     pub fn get_player_eligible_cards(&self, name: &str) {
         let idx = self.get_player_index(name);
-        let lead_card = Card::new(self.current_round.lead_thrower.suit, self.current_round.lead_thrower.value.to_string());
+        let lead_card = Card::new(
+            self.current_round.lead_thrower.suit,
+            self.current_round.lead_thrower.value.to_string(),
+        );
         self.players[idx].show_eligible_cards(&lead_card);
     }
 
@@ -268,6 +278,10 @@ impl<'a> Game<'a> {
         if !player.is_empty() {
             println!("{} Won the game", player)
         }
+    }
+
+    pub fn get_player_count(&self) -> usize {
+        self.players.len()
     }
 }
 
@@ -301,8 +315,3 @@ impl<'a> Participant<'a> {
         }
     }
 }
-
-
-
-
-
